@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👽 XENO-GEN // Procedural ET Asset Generator</title>
+<link rel="stylesheet" href="css/alien.css"></head>
+<body>
+
+<header>
+  <div>
+    <h1>XENO-GEN <span class="blink">_</span></h1>
+    <div class="sub">PROCEDURAL EXTRATERRESTRIAL ASSET GENERATOR // v2.0</div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div>
+      <div class="section-label">// SEED CONTROL</div>
+      <div class="control-group">
+        <div class="control-row">
+          <label>SEED</label>
+          <input type="number" id="seed-input" value="42069" min="0" max="999999999">
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-primary" style="flex:1" onclick="randomSeed()">RANDOM</button>
+          <button class="btn btn-primary" style="flex:1" onclick="generateSingle()">GENERATE</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">// RESOLUTION</div>
+      <div class="control-row">
+        <label>SIZE</label>
+        <select id="res-select">
+          <option value="16">16×16</option>
+          <option value="24" selected>24×24</option>
+          <option value="32">32×32</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">// GROTESQUE DIAL</div>
+      <div class="control-group">
+        <div class="control-row">
+          <label>ASYMMETRY</label>
+          <input type="range" id="r-asymmetry" min="0" max="100" value="60">
+          <span class="val-display" id="v-asymmetry">60</span>
+        </div>
+        <div class="control-row">
+          <label>NOISE</label>
+          <input type="range" id="r-noise" min="0" max="100" value="50">
+          <span class="val-display" id="v-noise">50</span>
+        </div>
+        <div class="control-row">
+          <label>MUTATION</label>
+          <input type="range" id="r-mutation" min="0" max="100" value="40">
+          <span class="val-display" id="v-mutation">40</span>
+        </div>
+        <div class="control-row">
+          <label>SLIME</label>
+          <input type="range" id="r-slime" min="0" max="100" value="50">
+          <span class="val-display" id="v-slime">50</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">// FEATURES</div>
+      <div class="control-group">
+        <div class="toggle-row">
+          <label>ANTENNA</label>
+          <div class="toggle on" id="t-antenna" onclick="toggleFeature(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <label>SLIME DRIPS</label>
+          <div class="toggle on" id="t-slime" onclick="toggleFeature(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <label>SCARS</label>
+          <div class="toggle on" id="t-scars" onclick="toggleFeature(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <label>ASYMMETRY</label>
+          <div class="toggle on" id="t-asym" onclick="toggleFeature(this)"></div>
+        </div>
+        <div class="toggle-row">
+          <label>ANIMATION</label>
+          <div class="toggle on" id="t-anim" onclick="toggleFeature(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">// SPRITE SHEET</div>
+      <div class="control-group">
+        <div class="control-row">
+          <label>COUNT</label>
+          <input type="number" id="sheet-count" value="12" min="1" max="64">
+        </div>
+        <div class="control-row">
+          <label>SPACING</label>
+          <input type="number" id="sheet-spacing" value="4" min="0" max="16">
+        </div>
+        <div class="control-row">
+          <label>BASE SEED</label>
+          <input type="number" id="sheet-seed" value="1000" min="0" max="999999">
+        </div>
+        <button class="btn btn-accent" style="width:100%" onclick="buildSpriteSheet()">BUILD SHEET</button>
+        <button class="btn btn-primary" style="width:100%" onclick="downloadSheet()">EXPORT PNG</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">// ACTIONS</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="generateBatch()">BATCH PREVIEW (6)</button>
+        <button class="btn btn-danger" onclick="mutateAll()">MUTATE ALL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="generateSingle()" style="padding:8px 18px">↻ REGEN</button>
+      <button class="btn btn-primary" onclick="randomSeed(); generateSingle()" style="padding:8px 18px">⚡ RANDOM</button>
+      <div class="zoom-label">ZOOM:</div>
+      <div class="zoom-btns">
+        <button class="zoom-btn" onclick="setZoom(4)">4×</button>
+        <button class="zoom-btn active" onclick="setZoom(8)">8×</button>
+        <button class="zoom-btn" onclick="setZoom(12)">12×</button>
+        <button class="zoom-btn" onclick="setZoom(16)">16×</button>
+      </div>
+    </div>
+
+    <div class="canvas-area">
+      <div class="preview-section">
+        <div class="preview-box">
+          <h3>// SPECIMEN</h3>
+          <canvas id="single-canvas"></canvas>
+          <div id="dna-display" class="dna-row"></div>
+        </div>
+
+        <div class="preview-box">
+          <h3>// ANIMATION FRAMES</h3>
+          <canvas id="anim-canvas"></canvas>
+          <div style="font-size:0.65rem;color:var(--textdim);">IDLE · BLINK · BREATHE · TWITCH</div>
+        </div>
+
+        <div class="preview-box" id="batch-box">
+          <h3>// BATCH VARIANTS</h3>
+          <canvas id="batch-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="sheet-area">
+        <h3>// SPRITE SHEET OUTPUT</h3>
+        <canvas id="sheet-canvas"></canvas>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">SEED: <span id="stat-seed">—</span></div>
+      <div class="stat">RES: <span id="stat-res">—</span></div>
+      <div class="stat">EYES: <span id="stat-eyes">—</span></div>
+      <div class="stat">MOUTH: <span id="stat-mouth">—</span></div>
+      <div class="stat">ANTENNA: <span id="stat-antenna">—</span></div>
+      <div class="stat">ASYMM: <span id="stat-asymm">—</span></div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script src="js/prng.js"></script>
+<script src="js/palette.js"></script>
+<script src="js/pixel-draw.js"></script>
+<script src="js/alien-generator.js"></script>
+<script src="js/main.js"></script>
+<!--
+
+
+
+
+
+
+====================================================================
+DEVELOPER NOTES — XENOGEN SYSTEM DOCUMENTATION
+====================================================================
+
+HOW TO TWEAK PARAMETERS FOR MORE GROTESQUE ALIENS
+==================================================
+1. ASYMMETRY (asymmetryFactor: 0.0–1.0)
+   Increase to 0.9+ to make heads lopsided, eyes at wildly different heights,
+   mouths sliding off-center. Combine with high noiseLevel for maximum horror.
+   genome.asymLeft/asymRight control per-side deformation independently.
+
+2. NOISE LEVEL + MUTATION LEVEL
+   noiseLevel controls texture pixel density (bumps, pores, discoloration).
+   mutationLevel increases scar count and noise type variety.
+   At 0.9 both: aliens look diseased and heavily scarred.
+   Mix: noiseLevel=0.3, mutationLevel=0.9 = few bumps but MANY deep scars.
+
+3. EYE COUNT + SIZE VARIATION
+   Increase eyeCount max from 4→7 in generateGenome.
+   Add asymmetric eye sizes: eyes[0].size can be 1 while eyes[1].size is 4.
+   Add blinking eye at random location on body (not just head).
+
+4. SLIME DRIPS
+   Increase slimeLevel + drip length (1–3 → 1–6).
+   Add slime pooling under body by drawing horizontal smears at body bottom.
+
+5. MOUTH HORROR
+   Add new mouth type 'gaping' — fills 60% of face width.
+   Add 'exposed_brain' as a head variant — pinkish area at top of head.
+   Tentacle mouth: increase tentacle count to 5+ with varying lengths.
+
+HOW TO EXPAND INTO DIFFERENT ALIEN RACES
+=========================================
+Create a RACE definition object:
+  const RACES = {
+    'greys': {
+       headShapes: ['oval','tall'],
+       eyeCount: [2,2],    // always 2
+       eyeSize: [3,4],     // large
+       colorPalette: 'grey',
+       bodyRatio: 1.2,     // tall thin body
+    },
+    'insectoid': {
+       headShapes: ['triangular'],
+       eyeCount: [4,4],
+       eyeSize: [1,2],
+       colorPalette: 'chitin',
+       mouthTypes: ['fanged','zigzag'],
+       antennaTypes: ['double_droopy','triple_spiky'],
+    },
+    'blob': {
+       headShapes: ['bulbous'],
+       bodyW: [10,14],
+       slimeLevel: [0.8, 1.0],
+       mouthTypes: ['sucker','tentacle'],
+    },
+    'crustacean': { ... }
+  };
+
+Then in generateGenome(seed, overrides):
+  if (overrides.race) {
+    const raceDef = RACES[overrides.race];
+    headShape = rng.pick(raceDef.headShapes);
+    // override all other traits accordingly
+  }
+
+This creates clean inheritance where each race has defined trait ranges
+but still uses the PRNG for per-specimen variation within those ranges.
+
+HOW TO ADD BIOME-BASED VARIATION
+==================================
+Biome affects COLOR PALETTE and FEATURE WEIGHTS:
+
+  const BIOMES = {
+    'volcanic': {
+       colorOverride: ['#3a0000','#7a1010','#cc2222'],
+       slimeColor: '#ff4400',
+       eyeColor: '#ff8800',
+       antennaWeight: 0.1,   // rare antennas — too hot
+       scarWeight: 1.5,      // more scars from lava
+    },
+    'deep_ocean': {
+       colorOverride: ['#001a2a','#003a5a','#006a9a'],
+       slimeColor: '#00ffee',
+       eyeColor: '#00ffff',
+       bioluminescent: true, // add glow pixels
+       tentacleWeight: 2.0,
+    },
+    'fungal_forest': {
+       colorOverride: ['#1a0a2a','#4a1a5a','#8a3a9a'],
+       spotPattern: true,    // add polka dot texture noise
+       slimeColor: '#cc88ff',
+    },
+    'arctic': {
+       colorOverride: ['#a0c8e0','#c8e8ff','#e8f4ff'],
+       furTexture: true,     // horizontal stripe noise
+       noiseLevel: 0.2,      // cleaner skin in cold
+    },
+  };
+
+In generateGenome:
+  if (overrides.biome) {
+    const biome = BIOMES[overrides.biome];
+    Object.assign(palette, {
+       body1: biome.colorOverride[0],
+       body2: biome.colorOverride[1],
+       body3: biome.colorOverride[2],
+       slime: biome.slimeColor,
+       eye:   biome.eyeColor,
+    });
+    noiseLevel   *= (biome.noiseWeight ?? 1.0);
+    // etc.
+  }
+
+Biome + Race = full taxonomy. E.g.: volcanic_insectoid vs arctic_blob.
+Each combination creates a statistically distinct alien population.
+====================================================================
+-->
+</body>
+</html>
